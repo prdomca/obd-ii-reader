@@ -17,6 +17,7 @@ be built and tried without a vehicle or an OBD-II adapter.
 - Demo mode using predefined responses from `data/demo.txt`
 - Input validation and separate connection/protocol error handling
 - Automatic cleanup of the serial connection through RAII
+- Hardware-independent unit and integration tests
 
 ## Requirements
 
@@ -51,6 +52,26 @@ To remove the executable and any object files, run:
 ```sh
 make clean
 ```
+
+## Testing
+
+Run the complete hardware-independent test suite:
+
+```sh
+make test
+```
+
+This runs unit tests for response cleanup, hexadecimal parsing, baud-rate
+mapping, PID validation, conversion formulas, and demo connection behavior. It
+also runs the complete interactive demo workflow and verifies its output.
+
+Run the same suite with AddressSanitizer and UndefinedBehaviorSanitizer:
+
+```sh
+make test-sanitized
+```
+
+The sanitized target uses Clang and restores a normal build after the tests.
 
 ## Quick Start: Demo Mode
 
@@ -210,6 +231,14 @@ removed before parsing. A demo file is recognized when its path is exactly
 │   └── ObdUtils.h
 ├── data/
 │   └── demo.txt                 Demo command/response data
+├── tests/
+│   ├── TestFramework.h          Lightweight shared test runner
+│   ├── TestSuites.h             Test-suite declarations
+│   ├── TestMain.cc              Unit-test entry point
+│   ├── ObdUtilsTests.cc         Response, hexadecimal, and baud-rate tests
+│   ├── ObdReaderTests.cc        PID parser and conversion tests
+│   ├── ObdConnectionTests.cc    Demo connection and error-path tests
+│   └── demo_integration.sh      End-to-end demo verification
 ├── build/                       Generated objects, dependencies, and executable
 ├── Makefile                     Build, demo, and cleanup targets
 ├── README.md                    Project documentation
@@ -243,7 +272,7 @@ the menu immediately; an RPM error stops the current 50-read sequence.
 - Responses are handled as a single cleaned text stream. Multi-ECU or complex
   multi-frame responses are not explicitly decoded.
 - The adapter must use one of the three supported baud rates.
-- There is no automated test suite in the repository.
+- Live adapter and vehicle behavior still requires manual hardware testing.
 
 ## Safety
 

@@ -16,16 +16,13 @@ const std::string CoolantTemperatureResponseHeader = "4105";
 
 ObdPidReader::ObdPidReader(ObdConnection &obdConnection) : connection(obdConnection) {}
 
-// Sends an OBD command, validates the response header and length, and returns
-// the requested data bytes.
+// Validates a PID response and returns the requested data bytes.
 
-std::vector<int> ObdPidReader::readPidBytes(const std::string &command,
-                                            const std::string &expectedHeader,
-                                            std::size_t dataByteCount)
+std::vector<int> ObdPidReader::parsePidBytes(const std::string &response,
+                                             const std::string &expectedHeader,
+                                             std::size_t dataByteCount,
+                                             const std::string &command)
 {
-    std::string response;
-    connection.query(command, response);
-
     std::size_t headerPosition = response.find(expectedHeader);
     if (headerPosition == std::string::npos)
     {
@@ -57,16 +54,34 @@ std::vector<int> ObdPidReader::readPidBytes(const std::string &command,
     return bytes;
 }
 
+// Sends an OBD command and parses the returned data bytes.
+
+std::vector<int> ObdPidReader::readPidBytes(const std::string &command,
+                                            const std::string &expectedHeader,
+                                            std::size_t dataByteCount)
+{
+    std::string response;
+    connection.query(command, response);
+    return parsePidBytes(response, expectedHeader, dataByteCount, command);
+}
+
 // Constructor.
 
 EngineDataReader::EngineDataReader(ObdConnection &obdConnection) : ObdPidReader(obdConnection) {}
+
+int EngineDataReader::calculateRpm(int firstByte, int secondByte)
+{
+    return (firstByte * 256 + secondByte) / 4;
+}
+
+int EngineDataReader::calculateCoolantTemperature(int dataByte) { return dataByte - 40; }
 
 // Reads, calculates, and prints the engine speed.
 
 void EngineDataReader::readRpm()
 {
     std::vector<int> bytes = readPidBytes(RpmCommand, RpmResponseHeader, 2);
-    int rpm = (bytes[0] * 256 + bytes[1]) / 4;
+    int rpm = calculateRpm(bytes[0], bytes[1]);
 
     std::cout << "Engine speed: " << rpm << " rpm\n";
 }
@@ -77,7 +92,7 @@ void EngineDataReader::readCoolantTemperature()
 {
     std::vector<int> bytes =
         readPidBytes(CoolantTemperatureCommand, CoolantTemperatureResponseHeader, 1);
-    int coolantTemperature = bytes[0] - 40;
+    int coolantTemperature = calculateCoolantTemperature(bytes[0]);
 
     std::cout << "Coolant temperature: " << coolantTemperature << " C\n";
 }
