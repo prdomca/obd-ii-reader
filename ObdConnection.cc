@@ -9,7 +9,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-// Konstruktor
+// Constructor.
 
 ObdConnection::ObdConnection(const std::string &port, int baud)
     : portName(port), baudRate(baud), fileDescriptor(-1),
@@ -19,12 +19,12 @@ ObdConnection::ObdConnection(const std::string &port, int baud)
 {
 }
 
-// Destruktor
+// Destructor.
 
 ObdConnection::~ObdConnection() { closeConnection(); }
 
-// Megnyitja a soros portot, majd beállítja a kommunikációhoz szükséges paramétereket:
-// a sebességet, a 8N1-es adatkeretet, a nyers adatkezelést és az olvasási időkorlátot.
+// Opens the serial port and configures its baud rate, 8N1 framing, raw I/O,
+// and read timeout.
 
 void ObdConnection::openConnection()
 {
@@ -35,7 +35,7 @@ void ObdConnection::openConnection()
         std::ifstream demoFile(portName);
         if (!demoFile)
         {
-            throw ObdConnectionException("A demo fajlt nem lehetett megnyitni: " + portName);
+            throw ObdConnectionException("Could not open the demo file: " + portName);
         }
 
         demoConnectionOpen = true;
@@ -45,8 +45,8 @@ void ObdConnection::openConnection()
     speed_t speed = Utils::baudToConstant(baudRate);
     if (speed == 0)
     {
-        throw ObdConnectionException("A baud rate csak " + Utils::supportedBaudRatesText() +
-                                     " lehet.");
+        throw ObdConnectionException("The baud rate must be one of the following: " +
+                                     Utils::supportedBaudRatesText() + ".");
     }
 
     closeConnection();
@@ -54,20 +54,20 @@ void ObdConnection::openConnection()
     fileDescriptor = open(portName.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
     if (fileDescriptor < 0)
     {
-        throw ObdConnectionException("A soros portot nem lehetett megnyitni: " + portName);
+        throw ObdConnectionException("Could not open the serial port: " + portName);
     }
 
     termios tty{};
     if (tcgetattr(fileDescriptor, &tty) != 0)
     {
         closeConnection();
-        throw ObdConnectionException("A soros port beallitasai nem olvashatok ki.");
+        throw ObdConnectionException("Could not read the serial-port settings.");
     }
 
     if (cfsetispeed(&tty, speed) != 0 || cfsetospeed(&tty, speed) != 0)
     {
         closeConnection();
-        throw ObdConnectionException("A soros port sebesseget nem lehetett beallitani.");
+        throw ObdConnectionException("Could not set the serial-port baud rate.");
     }
 
     tty.c_cflag = static_cast<tcflag_t>((tty.c_cflag & static_cast<tcflag_t>(~CSIZE)) | CS8);
@@ -83,11 +83,11 @@ void ObdConnection::openConnection()
     if (tcsetattr(fileDescriptor, TCSANOW, &tty) != 0)
     {
         closeConnection();
-        throw ObdConnectionException("A soros port beallitasait nem lehetett alkalmazni.");
+        throw ObdConnectionException("Could not apply the serial-port settings.");
     }
 }
 
-// Lezárja a soros portot
+// Closes the serial port.
 
 void ObdConnection::closeConnection()
 {
@@ -101,7 +101,7 @@ void ObdConnection::closeConnection()
     }
 }
 
-// Inicializálja az OBD-adaptert a szükséges AT parancsok elküldésével
+// Initializes the OBD adapter by sending the required AT commands.
 
 void ObdConnection::initialize()
 {
@@ -121,19 +121,18 @@ void ObdConnection::initialize()
         }
         catch (const ObdException &exception)
         {
-            throw ObdConnectionException("Inicializalasi hiba a kovetkezo parancsnal: " + command +
-                                         ". " + exception.what());
+            throw ObdConnectionException("Initialization failed while sending command " + command +
+                                         ": " + exception.what());
         }
 
         if (command != "ATZ" && response.find("OK") == std::string::npos)
         {
-            throw ObdProtocolException("Az adapter nem vart valaszt adott: " + response);
+            throw ObdProtocolException("The adapter returned an unexpected response: " + response);
         }
     }
 }
 
-// A tényleges kommunikációért felelős függvény, küld egy parancsot, majd kis várakozás után
-// kiolvassa a választ
+// Sends a command, waits briefly, and reads the adapter's response.
 
 void ObdConnection::query(const std::string &command, std::string &response)
 {
@@ -141,7 +140,7 @@ void ObdConnection::query(const std::string &command, std::string &response)
 
     if (!isOpen())
     {
-        throw ObdConnectionException("Nincs megnyitott kapcsolat.");
+        throw ObdConnectionException("The connection is not open.");
     }
 
     sendCommand(command);
@@ -153,11 +152,11 @@ void ObdConnection::query(const std::string &command, std::string &response)
     if (response.find("NODATA") != std::string::npos ||
         response.find("ERROR") != std::string::npos || response == "?")
     {
-        throw ObdProtocolException("Az adapter ervenytelen valaszt adott: " + response);
+        throw ObdProtocolException("The adapter returned an invalid response: " + response);
     }
 }
 
-// Ellenőrzi, hogy meg van-e nyitva a soros port
+// Returns whether the serial or demo connection is open.
 
 bool ObdConnection::isOpen() const
 {
@@ -169,7 +168,7 @@ bool ObdConnection::isOpen() const
     return fileDescriptor >= 0;
 }
 
-// Kiküldi a kívánt parancsot
+// Sends a command to the adapter.
 
 void ObdConnection::sendCommand(const std::string &command)
 {
@@ -190,20 +189,19 @@ void ObdConnection::sendCommand(const std::string &command)
 
         if (written < 0)
         {
-            throw ObdConnectionException("A parancs kuldese nem sikerult: " + command);
+            throw ObdConnectionException("Failed to send command: " + command);
         }
 
         if (written == 0)
         {
-            throw ObdConnectionException("A parancs kuldese megszakadt: " + command);
+            throw ObdConnectionException("Command transmission was interrupted: " + command);
         }
 
         totalWritten += static_cast<std::size_t>(written);
     }
 }
 
-// Addig olvassa a választ, amíg meg nem érkezik a lezáró '>' karakter,
-// vagy az adapter már nem küld több adatot.
+// Reads until the terminating '>' prompt arrives or the adapter stops sending data.
 
 void ObdConnection::readResponse(std::string &response)
 {
@@ -216,7 +214,7 @@ void ObdConnection::readResponse(std::string &response)
         std::ifstream demoFile(portName);
         if (!demoFile)
         {
-            throw ObdConnectionException("A demo fajlt nem lehetett megnyitni: " + portName);
+            throw ObdConnectionException("Could not open the demo file: " + portName);
         }
 
         std::string line;
@@ -238,14 +236,13 @@ void ObdConnection::readResponse(std::string &response)
 
         if (result.empty())
         {
-            throw ObdProtocolException("A demo fajlban nincs valasz erre a parancsra: " +
-                                       lastCommand);
+            throw ObdProtocolException("The demo file has no response for command: " + lastCommand);
         }
 
         response = Utils::cleanResponse(result);
         if (response.empty())
         {
-            throw ObdProtocolException("Nem jott valasz az adaptertol.");
+            throw ObdProtocolException("The adapter returned no response.");
         }
 
         return;
@@ -258,7 +255,7 @@ void ObdConnection::readResponse(std::string &response)
         ssize_t count = read(fileDescriptor, buffer, sizeof(buffer) - 1);
         if (count < 0)
         {
-            throw ObdConnectionException("A valasz olvasasa nem sikerult.");
+            throw ObdConnectionException("Failed to read the response.");
         }
 
         if (count == 0)
@@ -271,7 +268,7 @@ void ObdConnection::readResponse(std::string &response)
 
         if (result.size() > 1000)
         {
-            throw ObdProtocolException("Tul hosszu valasz erkezett az adaptertol.");
+            throw ObdProtocolException("The adapter response is too long.");
         }
 
         if (result.find('>') != std::string::npos)
@@ -283,6 +280,6 @@ void ObdConnection::readResponse(std::string &response)
     response = Utils::cleanResponse(result);
     if (response.empty())
     {
-        throw ObdProtocolException("Nem jott valasz az adaptertol.");
+        throw ObdProtocolException("The adapter returned no response.");
     }
 }

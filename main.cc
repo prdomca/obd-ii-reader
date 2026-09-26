@@ -13,7 +13,7 @@ class ObdProgram
   private:
     static const int RpmReadCount = 50;
 
-    // Kiírja a megadott szöveget, majd beolvas egy teljes sort a felhasználótól
+    // Prints the prompt and reads a complete line from standard input.
 
     bool readLine(const std::string &prompt, std::string &line) const
     {
@@ -21,7 +21,7 @@ class ObdProgram
         return static_cast<bool>(std::getline(std::cin, line));
     }
 
-    // Addig kér be egy egész számot, amíg a felhasználó érvényes értéket nem ad meg
+    // Keeps prompting until the user enters a valid integer.
 
     bool readInteger(const std::string &prompt, int &value) const
     {
@@ -40,11 +40,11 @@ class ObdProgram
                 return true;
             }
 
-            std::cerr << "Hibas input.\n";
+            std::cerr << "Invalid input.\n";
         }
     }
 
-    // Addig kér be szöveget, amíg a felhasználó érvényes, nem üres választ ad meg
+    // Keeps prompting until the user enters a non-empty value.
 
     bool readText(const std::string &prompt, std::string &value) const
     {
@@ -60,12 +60,12 @@ class ObdProgram
                 return true;
             }
 
-            std::cerr << "Hibas input.\n";
+            std::cerr << "Invalid input.\n";
         }
     }
 
   public:
-    // Bekéri a kapcsolódási adatokat, inicializálja az adaptert, majd elindítja a menüt
+    // Reads the connection settings, initializes the adapter, and starts the menu.
 
     int run()
     {
@@ -74,9 +74,9 @@ class ObdProgram
             std::string port;
             int baudRate = 0;
 
-            if (!readText("Add meg a soros portot: ", port))
+            if (!readText("Enter the serial port: ", port))
             {
-                std::cerr << "A soros port beolvasasa nem sikerult.\n";
+                std::cerr << "Failed to read the serial port.\n";
                 return 1;
             }
 
@@ -84,13 +84,13 @@ class ObdProgram
             {
                 int baudRateChoice = 0;
 
-                std::cout << "Valassz baud rate-et:\n";
+                std::cout << "Select a baud rate:\n";
                 std::cout << "1 - " << Utils::SlowBaudRate << '\n';
                 std::cout << "2 - " << Utils::DefaultBaudRate << '\n';
                 std::cout << "3 - " << Utils::FastBaudRate << '\n';
-                if (!readInteger("Valasztas: ", baudRateChoice))
+                if (!readInteger("Choice: ", baudRateChoice))
                 {
-                    std::cerr << "A baud rate beolvasasa nem sikerult.\n";
+                    std::cerr << "Failed to read the baud rate.\n";
                     return 1;
                 }
 
@@ -106,7 +106,7 @@ class ObdProgram
                     baudRate = Utils::FastBaudRate;
                     break;
                 default:
-                    std::cerr << "Ervenytelen baud rate valasztas.\n";
+                    std::cerr << "Invalid baud-rate choice.\n";
                     break;
                 }
 
@@ -128,13 +128,13 @@ class ObdProgram
                 {
                     int choice = 0;
 
-                    std::cout << "\nMit szeretnel lekerdezni?\n";
-                    std::cout << "1 - Homerseklet\n";
-                    std::cout << "2 - Fordulatszam gyorsan\n";
-                    std::cout << "3 - Kilepes\n";
-                    if (!readInteger("Valasztas: ", choice))
+                    std::cout << "\nWhat would you like to read?\n";
+                    std::cout << "1 - Coolant temperature\n";
+                    std::cout << "2 - Engine speed (rapid sampling)\n";
+                    std::cout << "3 - Exit\n";
+                    if (!readInteger("Choice: ", choice))
                     {
-                        std::cerr << "Ervenytelen valasztas.\n";
+                        std::cerr << "Invalid choice.\n";
                         return 1;
                     }
 
@@ -148,7 +148,7 @@ class ObdProgram
                         catch (const ObdException &exception)
                         {
                             std::cerr
-                                << "Hutoviz homerseklet lekerdezesi hiba: " << exception.what()
+                                << "Failed to read coolant temperature: " << exception.what()
                                 << '\n';
                         }
                         break;
@@ -161,7 +161,8 @@ class ObdProgram
                             }
                             catch (const ObdException &exception)
                             {
-                                std::cerr << "RPM lekerdezesi hiba: " << exception.what() << '\n';
+                                std::cerr << "Failed to read engine speed: " << exception.what()
+                                          << '\n';
                                 break;
                             }
                         }
@@ -169,26 +170,26 @@ class ObdProgram
                     case 3:
                         return 0;
                     default:
-                        std::cerr << "Ervenytelen valasztas.\n";
+                        std::cerr << "Invalid choice.\n";
                         break;
                     }
                 }
             }
             catch (const ObdException &exception)
             {
-                std::cerr << "Kapcsolodasi vagy inicializalasi hiba: " << exception.what() << '\n';
+                std::cerr << "Connection or initialization error: " << exception.what() << '\n';
 
                 bool retryConnection = false;
                 while (true)
                 {
                     std::string answer;
 
-                    if (!readText("Megadsz masik soros portot? (i/n): ", answer))
+                    if (!readText("Try another serial port? (y/n): ", answer))
                     {
                         return 1;
                     }
 
-                    if (answer == "i" || answer == "I")
+                    if (answer == "y" || answer == "Y")
                     {
                         retryConnection = true;
                         break;
@@ -199,7 +200,7 @@ class ObdProgram
                         break;
                     }
 
-                    std::cerr << "Hibas input.\n";
+                    std::cerr << "Invalid input.\n";
                 }
 
                 if (!retryConnection)
@@ -211,7 +212,7 @@ class ObdProgram
     }
 };
 
-// Elindítja a programot, és kezeli az esetleges váratlan hibákat
+// Starts the application and handles unexpected errors.
 
 int main()
 {
@@ -222,7 +223,7 @@ int main()
     }
     catch (const std::exception &exception)
     {
-        std::cerr << "Varatlan hiba: " << exception.what() << '\n';
+        std::cerr << "Unexpected error: " << exception.what() << '\n';
         return 1;
     }
 }

@@ -7,8 +7,8 @@
 class Utils
 {
   public:
-    // Az ELM327 adaptereknél ezek a gyakori soros sebességek;
-    // a 38400 a legtöbb adapter gyári alapértelmezése.
+    // These are common serial speeds for ELM327 adapters; 38400 is the factory
+    // default for many devices.
     static constexpr int SlowBaudRate = 9600;
     static constexpr int DefaultBaudRate = 38400;
     static constexpr int FastBaudRate = 115200;

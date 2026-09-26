@@ -5,19 +5,19 @@
 
 #include <iostream>
 
-// A lekérdezésekhez tartozó parancsok és a hozzájuk várt válaszfejlécek
+// Commands and expected response headers for the supported queries.
 
 const std::string RpmCommand = "010C";
 const std::string RpmResponseHeader = "410C";
 const std::string CoolantTemperatureCommand = "0105";
 const std::string CoolantTemperatureResponseHeader = "4105";
 
-// Konstruktor
+// Constructor.
 
 ObdPidReader::ObdPidReader(ObdConnection &obdConnection) : connection(obdConnection) {}
 
-// Elküldi a megadott OBD-parancsot, ellenőrzi a válasz fejlécét és hosszát,
-// majd kiolvassa és visszaadja a válaszban található adatbájtokat.
+// Sends an OBD command, validates the response header and length, and returns
+// the requested data bytes.
 
 std::vector<int> ObdPidReader::readPidBytes(const std::string &command,
                                             const std::string &expectedHeader,
@@ -29,15 +29,15 @@ std::vector<int> ObdPidReader::readPidBytes(const std::string &command,
     std::size_t headerPosition = response.find(expectedHeader);
     if (headerPosition == std::string::npos)
     {
-        throw ObdProtocolException("Nem a vart OBD valasz erkezett. Parancs: " + command +
-                                   ", valasz: " + response);
+        throw ObdProtocolException("Unexpected OBD response. Command: " + command +
+                                   ", response: " + response);
     }
 
     std::size_t dataPosition = headerPosition + expectedHeader.size();
     if (response.size() < dataPosition + dataByteCount * 2)
     {
-        throw ObdProtocolException("Tul rovid OBD valasz erkezett. Parancs: " + command +
-                                   ", valasz: " + response);
+        throw ObdProtocolException("OBD response is too short. Command: " + command +
+                                   ", response: " + response);
     }
 
     std::vector<int> bytes;
@@ -47,8 +47,8 @@ std::vector<int> ObdPidReader::readPidBytes(const std::string &command,
         int byte = Utils::hexByte(response, dataPosition + index * 2);
         if (byte == -1)
         {
-            throw ObdProtocolException("Hibas hexadecimalis adat erkezett. Parancs: " + command +
-                                       ", valasz: " + response);
+            throw ObdProtocolException("Invalid hexadecimal data. Command: " + command +
+                                       ", response: " + response);
         }
 
         bytes.push_back(byte);
@@ -57,21 +57,21 @@ std::vector<int> ObdPidReader::readPidBytes(const std::string &command,
     return bytes;
 }
 
-// Konstruktor
+// Constructor.
 
 EngineDataReader::EngineDataReader(ObdConnection &obdConnection) : ObdPidReader(obdConnection) {}
 
-// Kiolvassa, kiszámítja, majd kiírja a motor fordulatszámát.
+// Reads, calculates, and prints the engine speed.
 
 void EngineDataReader::readRpm()
 {
     std::vector<int> bytes = readPidBytes(RpmCommand, RpmResponseHeader, 2);
     int rpm = (bytes[0] * 256 + bytes[1]) / 4;
 
-    std::cout << "Motor fordulatszam: " << rpm << " rpm\n";
+    std::cout << "Engine speed: " << rpm << " rpm\n";
 }
 
-// Kiolvassa, kiszámítja, majd kiírja a hűtőfolyadék hőmérsékletét.
+// Reads, calculates, and prints the engine coolant temperature.
 
 void EngineDataReader::readCoolantTemperature()
 {
@@ -79,5 +79,5 @@ void EngineDataReader::readCoolantTemperature()
         readPidBytes(CoolantTemperatureCommand, CoolantTemperatureResponseHeader, 1);
     int coolantTemperature = bytes[0] - 40;
 
-    std::cout << "Hutoviz homerseklet: " << coolantTemperature << " C\n";
+    std::cout << "Coolant temperature: " << coolantTemperature << " C\n";
 }

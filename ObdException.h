@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <string>
 
-// Saját OBD-hibákat jelölő exception osztályok
+// Exception types for OBD connection and protocol errors.
 
 class ObdException : public std::runtime_error
 {
