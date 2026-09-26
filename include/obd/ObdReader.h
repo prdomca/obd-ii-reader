@@ -8,6 +8,13 @@
 
 class ObdPidReader
 {
+  public:
+    virtual ~ObdPidReader() = default;
+
+    static std::vector<int> parsePidBytes(const std::string &response,
+                                          const std::string &expectedHeader,
+                                          std::size_t dataByteCount, const std::string &command);
+
   protected:
     ObdConnection &connection;
 
@@ -20,6 +27,9 @@ class EngineDataReader : public ObdPidReader
 {
   public:
     explicit EngineDataReader(ObdConnection &obdConnection);
+
+    static int calculateRpm(int firstByte, int secondByte);
+    static int calculateCoolantTemperature(int dataByte);
 
     void readRpm();
     void readCoolantTemperature();
