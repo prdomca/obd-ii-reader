@@ -1,7 +1,7 @@
-#ifndef OBD_READER_H
-#define OBD_READER_H
+#ifndef OBD_READER_OBD_READER_H
+#define OBD_READER_OBD_READER_H
 
-#include "ObdConnection.h"
+#include "obd/ObdConnection.h"
 
 #include <string>
 #include <vector>
@@ -25,4 +25,4 @@ class EngineDataReader : public ObdPidReader
     void readCoolantTemperature();
 };
 
-#endif
+#endif // OBD_READER_OBD_READER_H

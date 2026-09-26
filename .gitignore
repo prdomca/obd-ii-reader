@@ -1,8 +1,14 @@
+# Operating system and editor files
 .DS_Store
-.vscode/
-build/
-out/
-obd_reader
-*.o
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/launch.json
+!.vscode/tasks.json
 *.plist
 ~$*.docx
+
+# Generated build output
+/build/
+/out/
+obd_reader
+*.o

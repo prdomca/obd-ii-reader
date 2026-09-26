@@ -1,5 +1,5 @@
-#ifndef OBD_EXCEPTION_H
-#define OBD_EXCEPTION_H
+#ifndef OBD_READER_OBD_EXCEPTION_H
+#define OBD_READER_OBD_EXCEPTION_H
 
 #include <stdexcept>
 #include <string>
@@ -24,4 +24,4 @@ class ObdProtocolException : public ObdException
     ObdProtocolException(const std::string &message) : ObdException(message) {}
 };
 
-#endif
+#endif // OBD_READER_OBD_EXCEPTION_H

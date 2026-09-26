@@ -1,7 +1,7 @@
-#include "ObdConnection.h"
-#include "ObdException.h"
-#include "ObdReader.h"
-#include "ObdUtils.h"
+#include "obd/ObdConnection.h"
+#include "obd/ObdException.h"
+#include "obd/ObdReader.h"
+#include "obd/ObdUtils.h"
 
 #include <exception>
 #include <iostream>

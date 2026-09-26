@@ -1,5 +1,5 @@
-#ifndef OBD_UTILS_H
-#define OBD_UTILS_H
+#ifndef OBD_READER_OBD_UTILS_H
+#define OBD_READER_OBD_UTILS_H
 
 #include <string>
 #include <termios.h>
@@ -19,4 +19,4 @@ class Utils
     static std::string supportedBaudRatesText();
 };
 
-#endif
+#endif // OBD_READER_OBD_UTILS_H

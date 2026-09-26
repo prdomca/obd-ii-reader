@@ -1,5 +1,5 @@
-#ifndef OBD_CONNECTION_H
-#define OBD_CONNECTION_H
+#ifndef OBD_READER_OBD_CONNECTION_H
+#define OBD_READER_OBD_CONNECTION_H
 
 #include <string>
 
@@ -27,4 +27,4 @@ class ObdConnection
     void query(const std::string &command, std::string &response);
 };
 
-#endif
+#endif // OBD_READER_OBD_CONNECTION_H

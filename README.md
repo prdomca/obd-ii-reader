@@ -14,7 +14,7 @@ be built and tried without a vehicle or an OBD-II adapter.
 - Automatic adapter initialization and protocol selection
 - Engine coolant temperature reading (Mode 01, PID `05`)
 - Engine speed reading (Mode 01, PID `0C`)
-- Demo mode using predefined responses from `demo.txt`
+- Demo mode using predefined responses from `data/demo.txt`
 - Input validation and separate connection/protocol error handling
 - Automatic cleanup of the serial connection through RAII
 
@@ -39,7 +39,8 @@ Clone the repository, enter its directory, and run:
 make
 ```
 
-This builds the `obd_reader` executable with the following compiler settings:
+This builds the `build/obd_reader` executable with the following compiler
+settings:
 
 ```text
 -std=c++17 -Wall -Wextra -Wpedantic
@@ -60,7 +61,7 @@ make run-demo
 ```
 
 The demo queries both supported values and then exits. With the bundled
-`demo.txt`, the decoded results are:
+`data/demo.txt`, the decoded results are:
 
 ```text
 Coolant temperature: 50 °C
@@ -72,11 +73,11 @@ The program displays temperature as `C` rather than using the degree symbol.
 You can also start demo mode manually:
 
 ```sh
-./obd_reader
+./build/obd_reader
 ```
 
-Enter `demo.txt` when prompted for the serial port. A baud-rate choice is still
-requested, but it is ignored in demo mode.
+Enter `data/demo.txt` when prompted for the serial port. A baud-rate choice is
+still requested, but it is ignored in demo mode.
 
 ## Using a Real Adapter
 
@@ -94,7 +95,7 @@ requested, but it is ignored in demo mode.
 4. Start the application:
 
    ```sh
-   ./obd_reader
+   ./build/obd_reader
    ```
 
 5. Enter the serial-device path and select the baud rate used by the adapter:
@@ -190,24 +191,29 @@ The bundled file contains:
 ```
 
 Carriage returns, line feeds, spaces, and the ELM327 prompt character (`>`) are
-removed before parsing. A demo file is recognized only when its path is exactly
-`demo.txt` or ends with `/demo.txt`.
+removed before parsing. A demo file is recognized when its path is exactly
+`demo.txt` or ends with `/demo.txt`, including the bundled `data/demo.txt`.
 
 ## Project Structure
 
 ```text
 .
-├── main.cc             Interactive command-line interface and program entry point
-├── ObdConnection.h     Serial/demo connection interface
-├── ObdConnection.cc    Serial configuration, ELM327 setup, and I/O
-├── ObdReader.h         OBD PID reader declarations
-├── ObdReader.cc        PID validation, decoding, and output
-├── ObdUtils.h          Utility declarations and supported baud rates
-├── ObdUtils.cc         Response cleanup, hexadecimal parsing, and baud mapping
-├── ObdException.h      Connection and protocol exception types
-├── demo.txt            Sample command/response data for demo mode
-├── Makefile            Build, demo, and cleanup targets
-└── LICENSE             MIT License
+├── src/                         C++ implementation files
+│   ├── main.cc                  CLI and program entry point
+│   ├── ObdConnection.cc         Serial and demo communication
+│   ├── ObdReader.cc             PID validation and decoding
+│   └── ObdUtils.cc              Shared utility implementations
+├── include/obd/                 Public project headers
+│   ├── ObdConnection.h
+│   ├── ObdException.h
+│   ├── ObdReader.h
+│   └── ObdUtils.h
+├── data/
+│   └── demo.txt                 Demo command/response data
+├── build/                       Generated objects, dependencies, and executable
+├── Makefile                     Build, demo, and cleanup targets
+├── README.md                    Project documentation
+└── LICENSE                      MIT License
 ```
 
 ## Error Handling
