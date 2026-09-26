@@ -1,0 +1,8 @@
+.DS_Store
+.vscode/
+build/
+out/
+obd_reader
+*.o
+*.plist
+~$*.docx
